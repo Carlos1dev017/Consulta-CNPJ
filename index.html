@@ -3,39 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Consulta CNPJ</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Consulta CNPJ</h1>
-    <input type="text" id="cnpj" placeholder="Digite o CNPJ aqui">
-    <button onclick="consultarCNPJ()">Consultar</button>
-    <div id="resultado"></div>
+    <header>
+        <h1>Consulta CNPJ</h1>
+        <input type="text" id="cnpj" placeholder="Digite o CNPJ aqui">
+        <button id="consultarBtn">Consultar</button>
+        <div id="loading">Carregando...</div>
+        <div id="resultado"></div> 
+    </header>
 
     <script>
-        async function consultarCNPJ(cnpj){
-        const url = `https://receitaws.com.br/v1/cnpj/{cnpj}`;
+        async function consultarCNPJ() {
+            const cnpj = document.getElementById('cnpj').value;
+            const corsAnywhereURL = 'https://cors-anywhere.herokuapp.com/';
+            const url = `${corsAnywhereURL}https://receitaws.com.br/v1/cnpj/${cnpj}`;
+
             const options = {
-            method: 'GET', 
-            headers: {
-                Accept: 'application/json'
-            }};
-        
-        try {   
-            const response = await fetch(url, options);
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json'
+                }
+            };
 
-            if (!response.ok) {
-                throw new Error(`Erro na requisição: ${response.status} - ${response.statusText}`);
+            const loadingDiv = document.getElementById('loading');
+            const resultadoDiv = document.getElementById('resultado');
+
+            loadingDiv.style.display = 'block';
+            resultadoDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(url, options);
+
+                if (!response.ok) {
+                    throw new Error(`Erro na requisição: ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log(data);
+                exibirResultado(data);
+            } catch (error) {
+                console.error("Erro ao consultar CNPJ:", error);
+                resultadoDiv.innerText = `Erro ao consultar CNPJ: ${error.message}`;
+            } finally {
+                loadingDiv.style.display = 'none';
             }
-
-            const data = await response.json();
-            console.log(data);
-            return data;
         }
-        catch (error) {
-            console.error("Erro ao consultar CNPJ:", error);
-            return null;
-        }   
-        }    
+
+        function exibirResultado(data) {
+            const resultadoDiv = document.getElementById('resultado');
+            resultadoDiv.innerHTML = '';
+
+            if (data) {
+                const nomeFantasia = document.createElement('p');
+                nomeFantasia.textContent = `Nome Fantasia: ${data.fantasia || 'Não Informado'}`;
+
+                const razaoSocial = document.createElement('p');
+                razaoSocial.textContent = `Razão Social: ${data.nome || 'Não Informado'}`;
+
+                const status = document.createElement('p');
+                status.textContent = `Status: ${data.status || 'Não Informado'}`;
+
+                resultadoDiv.appendChild(razaoSocial);
+                resultadoDiv.appendChild(nomeFantasia);
+                resultadoDiv.appendChild(status);
+            } else {
+                resultadoDiv.innerText = "Nenhum resultado encontrado.";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const consultarBtn = document.getElementById('consultarBtn');
+            consultarBtn.addEventListener('click', consultarCNPJ);
+        });
     </script>
 </body>
 </html>
